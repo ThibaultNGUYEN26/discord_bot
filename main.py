@@ -1,19 +1,9 @@
 # bot.py
-import os, discord, asyncio, random, datetime
+import os, discord, asyncio, random, datetime, webserver
 from dotenv import load_dotenv
 
-BLACK = "\033[1m;30m"
-RED = "\033[1m;31m"
-GREEN = "\033[1m;32m"
-YELLOW = "\033[1m;33m"
-BLUE = "\033[1m;34m"
-MAGENTA = "\033[1m;35m"
-CYAN = "\033[1m;36m"
-WHITE = "\033[1m;37m"
-EOC = "\033[0m"
-
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = os.environ['DISCORD_TOKEN']
 
 print("Connection with the bot...")
 
@@ -288,5 +278,7 @@ async def run_bot():
 		await client.close()
 		print("Bot disconnected.")
 
+
+webserver.keep_alive()
 # Run the bot with graceful shutdown on Ctrl+C
 asyncio.run(run_bot())
