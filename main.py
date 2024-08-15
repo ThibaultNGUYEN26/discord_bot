@@ -302,7 +302,7 @@ def start_pinging(url, interval):
 if __name__ == "__main__":
 	# URL of your server
 	ping_url = "https://discord-bot-78qc.onrender.com"
-	ping_interval = 900  # Interval in seconds (e.g., 3600 for 1 hour, 900 for 15 minutes)
+	ping_interval = 840  # Interval in seconds (e.g., 3600 for 1 hour, 840 for 14 minutes)
 
 	# Start the pinging in a separate thread
 	start_pinging(ping_url, ping_interval)
