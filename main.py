@@ -133,7 +133,10 @@ async def on_message(message):
 		# Read the updated file content to send to the user
 		with open("dispo.txt", 'r') as f:
 			dispo = f.read()
-		await message.channel.send(f"**{dispo}**")
+		if dispo.strip():  # Check if the file content is not empty after stripping any whitespace
+			await message.channel.send(f"**{dispo}**")
+		else:
+			await message.channel.send("There are **no availabilities** at the moment.")
 
 	elif msg.startswith("dispo "):
 		# Only enter this block if the message starts with "dispo " and has more content
