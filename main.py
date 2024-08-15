@@ -17,9 +17,40 @@ print("Connection with the bot...")
 
 # Create an instance of Intents and specify which events you want
 intents = discord.Intents.default() # This enables the default intents
+intents.members = True # Enable the members intent
 intents.message_content = True # This is required to receive message content events
 
 client = discord.Client(intents=intents)
+
+def get_user_id(target):
+	usernames = {
+		"michael": "yellowman",
+		"thibault": "drakehunthor",
+		"martin": "martinng",
+		"oceane": "oceane9149",
+		"lena": "lena1007",
+		"mathias": "barbuga",
+		"karine": ".karine.__46565"
+	}
+
+	user_ids = {
+		"yellowman": 241148202315808769,
+		"drakehunthor": 339089181164830731,
+		"martinng": 490073469099180032,
+		"oceane9149": 878725584778330112,
+		"lena1007": 943211763636260965,
+		"barbuga": 943932125256777788,
+		".karine.__46565": 1200175453458149482
+	}
+
+	# Convert the real name (target) to the corresponding username
+	username = usernames.get(target.lower(), None)
+
+	if username:
+		# Return the user ID corresponding to the username
+		return user_ids.get(username, None)
+	else:
+		return None
 
 @client.event
 async def on_ready():
@@ -50,6 +81,27 @@ async def on_message(message):
 		elif hour > 18:
 			greetings.append("Good evening")
 		await message.channel.send(f'**{random.choice(greetings)}, {message.author.name}!**')
+
+	if "dm" in msg:
+		msg = msg[3:]
+		i = 0
+		while True:
+			if msg[i] == ' ':
+				break
+			i += 1
+		target = msg[0:i]
+		msg = msg[i+1:]
+		print(msg)
+		print(target)
+		target_user_id = get_user_id(target)
+		target_user = message.guild.get_member(target_user_id)
+
+		try:
+			# Attempt to send the DM
+			await target_user.send(msg)
+		except discord.HTTPException as e:
+			# General error when sending the DM
+			await message.channel.send(f"An error occurred while trying to send a DM: {e}")
 
 	with open('game_list.txt') as f:
 		game_list = f.read().title()
@@ -256,8 +308,12 @@ async def on_message(message):
 
 	if msg == "disconnect":
 		await message.channel.send(f"**Goodbye I left the channel!**")
-		await client.close()
-	
+		await shutdown_webserver()  # Stop the webserver
+		await client.close()  # Close the bot connection
+		loop = asyncio.get_event_loop()
+		loop.stop()  # Stop the asyncio loop
+		sys.exit()  # Exit the process
+
 	if msg == "clear":
 		async for message in message.channel.history(limit=1000):
 			await message.delete()
@@ -279,6 +335,10 @@ async def on_message(message):
 			"```"
 		)
 		await message.channel.send(help_message)
+
+async def shutdown_webserver():
+	"""Stops the webserver by making a shutdown request."""
+	requests.post("http://localhost:8080/shutdown")
 
 async def run_bot():
 	try:
