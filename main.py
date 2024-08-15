@@ -1,5 +1,13 @@
 # bot.py
-import os, discord, asyncio, random, datetime, webserver
+import os
+import discord
+import asyncio
+import random
+import datetime
+import webserver
+import requests
+import time
+from threading import Thread
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -269,7 +277,6 @@ async def on_message(message):
 		)
 		await message.channel.send(help_message)
 
-# Function to run the bot
 async def run_bot():
 	try:
 		await client.start(TOKEN)
@@ -278,7 +285,28 @@ async def run_bot():
 		await client.close()
 		print("Bot disconnected.")
 
+def ping_server(url, interval):
+	while True:
+		try:
+			response = requests.get(url)
+			print(f"Pinged {url}, Status: {response.status_code}")
+		except requests.exceptions.RequestException as e:
+			print(f"Error pinging {url}: {e}")
+		time.sleep(interval)
 
-webserver.keep_alive()
-# Run the bot with graceful shutdown on Ctrl+C
-asyncio.run(run_bot())
+def start_pinging(url, interval):
+	ping_thread = Thread(target=ping_server, args=(url, interval))
+	ping_thread.daemon = True  # This allows the thread to exit when the main program exits
+	ping_thread.start()
+
+if __name__ == "__main__":
+	# URL of your server
+	ping_url = "https://discord-bot-78qc.onrender.com"
+	ping_interval = 900  # Interval in seconds (e.g., 3600 for 1 hour, 900 for 15 minutes)
+
+	# Start the pinging in a separate thread
+	start_pinging(ping_url, ping_interval)
+
+	webserver.keep_alive()
+	# Run the bot with graceful shutdown on Ctrl+C
+	asyncio.run(run_bot())
