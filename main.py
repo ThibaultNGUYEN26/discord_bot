@@ -53,54 +53,7 @@ def get_user_id(target):
 	else:
 		return None
 
-async def play_audio(message, url):
-	if not message.author.voice:
-		await message.channel.send("You need to be in a voice channel to play music!")
-		return
 
-	voice_channel = message.author.voice.channel
-	voice_client = message.guild.voice_client
-
-	if not voice_client:
-		voice_client = await voice_channel.connect()
-
-	elif voice_client.is_playing():
-		voice_client.stop()
-
-	ydl_opts = {
-		'format': 'bestaudio/best',
-		'quiet': True,
-		'noplaylist': True,
-		'outtmpl': 'downloads/%(title)s.%(ext)s',
-		'postprocessors': [{
-			'key': 'FFmpegExtractAudio',
-			'preferredcodec': 'mp3',
-			'preferredquality': '192',
-		}],
-		'cookiefile': 'cookies.txt'  # Add this if your videos are age-restricted or region-locked
-	}
-
-	try:
-		with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-			info = ydl.extract_info(url, download=True)
-			filename = ydl.prepare_filename(info)
-			if not filename.endswith('.mp3'):
-				filename = f"{os.path.splitext(filename)[0]}.mp3"
-
-		source = discord.FFmpegPCMAudio(filename)
-		voice_client.play(source)
-		await message.channel.send(f"Now playing: **{info.get('title', 'Unknown Title')}**")
-
-		# Wait for the audio to finish playing before removing the file
-		while voice_client.is_playing():
-			await asyncio.sleep(1)
-
-		# Remove the file after playback
-		os.remove(filename)
-
-	except Exception as e:
-		await message.channel.send(f"An error occurred: {str(e)}")
-		print(f"An error occurred: {str(e)}")
 
 @client.event
 async def on_ready():
@@ -415,22 +368,6 @@ async def on_message(message):
 				await message.channel.send("Failed to leave the voice channel.")
 		else:
 			await message.channel.send("I am not connected to any voice channel.")
-
-	# Example usage
-	if "play" in msg:
-		url = msg.split(" ", 1)[1]
-		await play_audio(message, url)
-
-	if msg == "disconnect":
-		# Check if the bot is connected to a voice channel
-		if message.guild.voice_client:
-			await message.guild.voice_client.disconnect()
-		await message.channel.send(f"**Goodbye I left the channel!**")
-		await shutdown_webserver()  # Stop the webserver
-		await client.close()  # Close the bot connection
-		loop = asyncio.get_event_loop()
-		loop.stop()  # Stop the asyncio loop
-		sys.exit()  # Exit the process
 
 	if msg == "clear":
 		async for message in message.channel.history(limit=1000):
