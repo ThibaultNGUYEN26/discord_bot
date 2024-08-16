@@ -53,6 +53,55 @@ def get_user_id(target):
 	else:
 		return None
 
+async def play_audio(message, url):
+	if not message.author.voice:
+		await message.channel.send("You need to be in a voice channel to play music!")
+		return
+
+	voice_channel = message.author.voice.channel
+	voice_client = message.guild.voice_client
+
+	if not voice_client:
+		voice_client = await voice_channel.connect()
+
+	elif voice_client.is_playing():
+		voice_client.stop()
+
+	ydl_opts = {
+		'format': 'bestaudio/best',
+		'quiet': True,
+		'noplaylist': True,
+		'outtmpl': 'downloads/%(title)s.%(ext)s',
+		'postprocessors': [{
+			'key': 'FFmpegExtractAudio',
+			'preferredcodec': 'mp3',
+			'preferredquality': '192',
+		}],
+		'cookiefile': 'cookies.txt'  # Add this if your videos are age-restricted or region-locked
+	}
+
+	try:
+		with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+			info = ydl.extract_info(url, download=True)
+			filename = ydl.prepare_filename(info)
+			if not filename.endswith('.mp3'):
+				filename = f"{os.path.splitext(filename)[0]}.mp3"
+
+		source = discord.FFmpegPCMAudio(filename)
+		voice_client.play(source)
+		await message.channel.send(f"Now playing: **{info.get('title', 'Unknown Title')}**")
+
+		# Wait for the audio to finish playing before removing the file
+		while voice_client.is_playing():
+			await asyncio.sleep(1)
+
+		# Remove the file after playback
+		os.remove(filename)
+
+	except Exception as e:
+		await message.channel.send(f"An error occurred: {str(e)}")
+		print(f"An error occurred: {str(e)}")
+
 @client.event
 async def on_ready():
 	print(f'{client.user} has connected to Discord!')
@@ -367,51 +416,10 @@ async def on_message(message):
 		else:
 			await message.channel.send("I am not connected to any voice channel.")
 
+	# Example usage
 	if "play" in msg:
 		url = msg.split(" ", 1)[1]
-		print(url)
-
-		if not message.author.voice:
-			await message.channel.send("You need to be in a voice channel to play music!")
-			return
-
-		if not message.guild.voice_client:
-			channel = message.author.voice.channel
-			await channel.connect()
-
-		voice_client = message.guild.voice_client
-
-		# Stop any current audio before playing the new one
-		if voice_client.is_playing():
-			voice_client.stop()
-
-		# Setup yt-dlp options
-		ydl_opts = {
-			'format': 'bestaudio/best',
-			'quiet': True,  # Set to True to silence the output
-			'noplaylist': True,
-			'outtmpl': 'downloads/%(title)s.%(ext)s',  # Download location
-			'postprocessors': [{
-				'key': 'FFmpegExtractAudio',
-				'preferredcodec': 'mp3',
-				'preferredquality': '192',
-			}],
-			'cookiefile': 'cookies.txt'  # Include if needed
-		}
-
-		# Download the audio
-		with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-			info = ydl.extract_info(url, download=True)
-			filename = ydl.prepare_filename(info)
-			if not filename.endswith('.mp3'):
-				filename = f"{os.path.splitext(filename)[0]}.mp3"
-
-		# Play the audio
-		source = discord.FFmpegPCMAudio(filename)
-		voice_client.play(source)
-
-		title = info.get('title', 'Unknown Title')
-		await message.channel.send(f"Now playing: **{title}**")
+		await play_audio(message, url)
 
 	if msg == "disconnect":
 		# Check if the bot is connected to a voice channel
