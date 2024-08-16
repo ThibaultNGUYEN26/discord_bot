@@ -7,7 +7,6 @@ import datetime
 import webserver
 import requests
 import time
-import yt_dlp
 from threading import Thread
 from dotenv import load_dotenv
 
