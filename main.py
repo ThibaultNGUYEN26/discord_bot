@@ -7,6 +7,7 @@ import datetime
 import webserver
 import requests
 import time
+import yt_dlp
 from threading import Thread
 from dotenv import load_dotenv
 
@@ -366,9 +367,45 @@ async def on_message(message):
 		else:
 			await message.channel.send("I am not connected to any voice channel.")
 
+	if "play" in msg:
+		url = msg.split(" ", 1)[1]
+		print(url)
 
+		if not message.author.voice:
+			await message.channel.send("You need to be in a voice channel to play music!")
+			return
+
+		if not message.guild.voice_client:
+			channel = message.author.voice.channel
+			await channel.connect()
+
+		voice_client = message.guild.voice_client
+
+		# Stop any current audio before playing the new one
+		if voice_client.is_playing():
+			voice_client.stop()
+
+		ydl_opts = {
+			'format': 'bestaudio/best',
+			'quiet': False,  # Set to True to silence the output, False for detailed logs
+			'noplaylist': True,
+			'verbose': True, # Enable verbose mode to get more detailed logs
+			'cookiefile': 'cookies.txt'
+		}
+
+		with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+			info = ydl.extract_info(url, download=False)
+			print(info)  # Print detailed info about the video
+			url2 = info['url']
+			title = info.get('title', 'Unknown Title')
+			source = await discord.FFmpegOpusAudio.from_probe(url2, method='fallback')
+			voice_client.play(source)
+			await message.channel.send(f"Now playing: **{title}**")
 
 	if msg == "disconnect":
+		# Check if the bot is connected to a voice channel
+		if message.guild.voice_client:
+			await message.guild.voice_client.disconnect()
 		await message.channel.send(f"**Goodbye I left the channel!**")
 		await shutdown_webserver()  # Stop the webserver
 		await client.close()  # Close the bot connection
