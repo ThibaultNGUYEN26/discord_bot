@@ -9,8 +9,13 @@ PROJECT_DIR = discord_bot
 # Default target: Help
 help:
 	@echo "Usage:"
+	@echo "  make ssh            - Run the ssh EC2 instance AWS"
 	@echo "  make run            - Run the script in background"
 	@echo "  make status         - Check the running script"
+	@echo "  make stop           - Stop the running script"
+
+ssh:
+	ssh -i $(SSH_KEY) $(SSH_USER)@$(EC2_IP)
 
 # Run the script in the background
 run: stop
@@ -41,4 +46,4 @@ push:
 		echo "No changes to dispo.txt or game_list.txt."; \
 	fi'
 
-.PHONY: help run status stop push
+.PHONY: help ssh run status stop push

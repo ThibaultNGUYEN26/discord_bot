@@ -385,22 +385,33 @@ async def on_message(message):
 		if voice_client.is_playing():
 			voice_client.stop()
 
+		# Setup yt-dlp options
 		ydl_opts = {
 			'format': 'bestaudio/best',
-			'quiet': False,  # Set to True to silence the output, False for detailed logs
+			'quiet': True,  # Set to True to silence the output
 			'noplaylist': True,
-			'verbose': True, # Enable verbose mode to get more detailed logs
-			'cookiefile': 'cookies.txt'
+			'outtmpl': 'downloads/%(title)s.%(ext)s',  # Download location
+			'postprocessors': [{
+				'key': 'FFmpegExtractAudio',
+				'preferredcodec': 'mp3',
+				'preferredquality': '192',
+			}],
+			'cookiefile': 'cookies.txt'  # Include if needed
 		}
 
+		# Download the audio
 		with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-			info = ydl.extract_info(url, download=False)
-			print(info)  # Print detailed info about the video
-			url2 = info['url']
-			title = info.get('title', 'Unknown Title')
-			source = await discord.FFmpegOpusAudio.from_probe(url2, method='fallback')
-			voice_client.play(source)
-			await message.channel.send(f"Now playing: **{title}**")
+			info = ydl.extract_info(url, download=True)
+			filename = ydl.prepare_filename(info)
+			if not filename.endswith('.mp3'):
+				filename = f"{os.path.splitext(filename)[0]}.mp3"
+
+		# Play the audio
+		source = discord.FFmpegPCMAudio(filename)
+		voice_client.play(source)
+
+		title = info.get('title', 'Unknown Title')
+		await message.channel.send(f"Now playing: **{title}**")
 
 	if msg == "disconnect":
 		# Check if the bot is connected to a voice channel
