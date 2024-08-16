@@ -1,0 +1,5 @@
+Connection ssh to EC2 instance AWS     : ssh -i discord_bot_key.pem ec2-user@15.237.187.176
+Launch the script in background        : nohup python3 main.py > output.log &
+Take a look at current running scripts : ps aux | grep main.py
+Stop a process                         : kill id
+Quit the ssh                           : exit

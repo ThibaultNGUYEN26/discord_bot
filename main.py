@@ -82,6 +82,17 @@ async def on_message(message):
 			greetings.append("Good evening")
 		await message.channel.send(f'**{random.choice(greetings)}, {message.author.name}!**')
 
+	if "send info" in msg:
+		# ID of the specific channel where you want to send the message
+		target_channel_id = 955199206329569280
+		# Get the channel object
+		target_channel = client.get_channel(target_channel_id)
+
+		info = ""
+
+		# Send the message to the specific channel
+		await target_channel.send(info)
+
 	if "dm" in msg:
 		msg = msg[3:]
 		i = 0
@@ -306,6 +317,57 @@ async def on_message(message):
 		else:
 			await message.channel.send("Invalid status. Please use **'yes'**, **'no'**, or **'maybe'**.")
 
+	if "join" in msg:
+		# Check if the user is in a voice channel
+		if message.author.voice:
+			channel = message.author.voice.channel
+			print(f"Attempting to join channel: {channel.name} (ID: {channel.id})")
+			
+			# Check if the bot is already connected to a voice channel and disconnect if so
+			if message.guild.voice_client:
+				await message.guild.voice_client.disconnect()
+
+			# Attempt to connect to the user's voice channel
+			try:
+				if isinstance(channel, discord.VoiceChannel):
+					if channel.permissions_for(message.guild.me).connect:
+						await channel.connect()
+						await message.channel.send(f"Joined **{channel.name}** voice channel!")
+					else:
+						await message.channel.send("I don't have permission to join this voice channel.")
+				else:
+					print("The channel is not a voice channel.")
+					await message.channel.send("Error: The channel is not a voice channel.")
+			except discord.errors.ClientException as e:
+				print(f"ClientException: {e}")
+				await message.channel.send("It seems I'm already in a voice channel.")
+			except discord.errors.Forbidden as e:
+				print(f"Forbidden: {e}")
+				await message.channel.send("I don't have permission to join this voice channel.")
+			except discord.errors.HTTPException as e:
+				print(f"HTTPException: {e}")
+				await message.channel.send("Failed to join the voice channel due to an internal error.")
+			except Exception as e:
+				print(f"Unexpected error: {e}")
+				await message.channel.send("Failed to join the voice channel.")
+		else:
+			await message.channel.send("You are not in a voice channel!")
+
+	if "leave" in msg:
+		# Check if the bot is connected to a voice channel
+		if message.guild.voice_client:
+			try:
+				# Disconnect the bot from the voice channel
+				await message.guild.voice_client.disconnect()
+				await message.channel.send(f"I have left the voice channel.")
+			except Exception as e:
+				print(f"Failed to leave the voice channel: {e}")
+				await message.channel.send("Failed to leave the voice channel.")
+		else:
+			await message.channel.send("I am not connected to any voice channel.")
+
+
+
 	if msg == "disconnect":
 		await message.channel.send(f"**Goodbye I left the channel!**")
 		await shutdown_webserver()  # Stop the webserver
@@ -337,8 +399,13 @@ async def on_message(message):
 		await message.channel.send(help_message)
 
 async def shutdown_webserver():
-	"""Stops the webserver by making a shutdown request."""
-	requests.post("http://localhost:8080/shutdown")
+	global webserver_thread
+	# Here, implement a shutdown mechanism for the webserver
+	# e.g., if using Flask:
+	# request.environ.get('werkzeug.server.shutdown')()
+	# Then, wait for the thread to finish
+	if webserver_thread is not None:
+		webserver_thread.join()
 
 async def run_bot():
 	try:
