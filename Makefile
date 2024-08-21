@@ -5,6 +5,7 @@ EC2_IP = 15.237.187.176
 SCRIPT = main.py
 OUTPUT_LOG = output.log
 PROJECT_DIR = discord_bot
+IMAGE_NAME = discord-bot
 
 # Default target: Help
 help:
@@ -13,6 +14,10 @@ help:
 	@echo "  make run            - Run the script in background"
 	@echo "  make status         - Check the running script"
 	@echo "  make stop           - Stop the running script"
+	@echo "  make build          - Build the Docker image"
+	@echo "  make docker-run     - Run the bot using Docker"
+	@echo "  make docker-stop    - Stop the Docker container"
+	@echo "  make clean          - Remove Docker images"
 
 ssh:
 	ssh -i $(SSH_KEY) $(SSH_USER)@$(EC2_IP)
@@ -46,4 +51,23 @@ push:
 		echo "No changes to dispo.txt or game_list.txt."; \
 	fi'
 
-.PHONY: help ssh run status stop push
+# Docker-related targets
+build:
+	docker build -t $(IMAGE_NAME) .
+
+docker-run: docker-stop
+	docker run --rm -d \
+		-v $(PWD)/dispo.txt:/app/dispo.txt \
+		-v $(PWD)/game_list.txt:/app/game_list.txt \
+		--env-file .env --name $(IMAGE_NAME) $(IMAGE_NAME)
+
+docker-status:
+	docker ps | grep $(IMAGE_NAME)
+
+docker-stop:
+	-docker stop $(IMAGE_NAME)
+
+clean:
+	docker rmi $(IMAGE_NAME)
+
+.PHONY: help ssh run status stop push build docker-run docker-status docker-stop clean
