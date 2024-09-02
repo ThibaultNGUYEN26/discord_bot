@@ -21,42 +21,53 @@ async def handle_message(client, message):
 	if not msg.startswith('.'):
 		return
 
+	# Remove the prefix for easier command parsing
 	command = msg[1:]
 
-	if "hello" in command:
+	# Split the command and arguments
+	split_command = command.split(' ', 1)
+	main_command = split_command[0]
+	args = split_command[1] if len(split_command) > 1 else ""
+
+	# Match commands exactly
+	if main_command == "hello":
 		await greet_user(message)
 
-	elif "game list" in command:
-		await list_games(message)
+	elif main_command == "game":
+		if args == "list":
+			await list_games(message)
 
-	elif "add game " in command:
-		await add_game(message, command[len("add game "):])
+	elif main_command == "add":
+		if args.startswith("game "):
+			await add_game(message, args[len("game "):])
 
-	elif "remove game " in command:
-		await remove_game(message, command[len("remove game "):])
+	elif main_command == "remove":
+		if args.startswith("game "):
+			await remove_game(message, args[len("game "):])
 
-	elif "random game" in command:
-		await choose_random_game(message)
+	elif main_command == "random":
+		if args == "game":
+			await choose_random_game(message)
 
-	elif "dispo" in command:
-		await handle_dispo_command(message, command)
+	elif main_command == "dispo":
+		await handle_dispo_command(message, args)
 
-	elif "onlyfeet" in command:
+	elif main_command == "onlyfeet":
 		await send_feet(message)
 
-	elif "dm" in command:
-		await send_direct_message(client, message, command[len("dm "):])
+	elif main_command == "dm":
+		await send_direct_message(client, message, args)
 
-	elif "join" in command:
+	elif main_command == "join":
 		await join_voice_channel(message)
 
-	elif "leave" in command:
+	elif main_command == "leave":
 		await leave_voice_channel(message)
 
-	elif "help" in command:
+	elif main_command == "help":
 		await send_help_message(message)
 
-	elif "disconnect" in command:
+	elif main_command == "disconnect":
 		await disconnect_bot(client, message)
 
 async def greet_user(message):
