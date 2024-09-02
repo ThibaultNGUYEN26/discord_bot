@@ -5,7 +5,7 @@ def get_user_id(target):
 		"martin": "martinng",
 		"oceane": "oceane9149",
 		"lena": "lena1007",
-		"mathias": "barbuga",
+		"matthias": "barbuga",
 		"karine": ".karine.__46565"
 	}
 
