@@ -1,6 +1,9 @@
 import datetime
 import random
 import discord
+import os
+import asyncio
+import sys
 from game_manager import list_games, add_game, remove_game, choose_random_game
 from dispo_manager import handle_dispo_command
 from voice_manager import join_voice_channel, leave_voice_channel
@@ -38,6 +41,9 @@ async def handle_message(client, message):
 	if "dispo" in command:
 		await handle_dispo_command(message, command)
 
+	if "onlyfeet" in command:
+		await send_feet(message)
+
 	if "dm" in command:
 		await send_direct_message(client, message, command[len("dm "):])
 
@@ -67,6 +73,21 @@ async def greet_user(message):
 
 	await message.channel.send(f'**{random.choice(greetings)}, {message.author.name}!**')
 
+async def send_feet(message):
+	folder_path = "./feet"
+
+	# Get a list of all files in the folder
+	images = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+
+	# Filter the list to include only image files (e.g., .png, .jpg, etc.)
+	image_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.avif')
+	images = [f for f in images if f.lower().endswith(image_extensions)]
+
+	selected_image = random.choice(images)
+	image_path = os.path.join(folder_path, selected_image)
+
+	await message.channel.send(file=discord.File(image_path))
+
 async def send_direct_message(client, message, command):
 	target, msg = command.split(' ', 1)
 	target_user_id = get_user_id(target)
@@ -93,6 +114,7 @@ async def send_help_message(message):
 		".dispo                        - Sees all the disponibilites up to 1 month\n"
 		".dispo <dd/mm> <yes/no/maybe> - Puts a dispobility to the date with the status\n"
 		".dispo remove <dd/mm>         - Removes the disponibility to the date\n"
+		".onlyfeet                     - Send a random picture of feet\n"
 		".help                         - Shows this help message."
 		"```"
 	)
