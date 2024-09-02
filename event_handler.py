@@ -26,40 +26,37 @@ async def handle_message(client, message):
 	if "hello" in command:
 		await greet_user(message)
 
-	if "game list" in command:
+	elif "game list" in command:
 		await list_games(message)
 
-	if "add game " in command:
+	elif "add game " in command:
 		await add_game(message, command[len("add game "):])
 
-	if "remove game " in command:
+	elif "remove game " in command:
 		await remove_game(message, command[len("remove game "):])
 
-	if "random game" in command:
+	elif "random game" in command:
 		await choose_random_game(message)
 
-	if "dispo" in command:
+	elif "dispo" in command:
 		await handle_dispo_command(message, command)
 
-	if "onlyfeet" in command:
+	elif "onlyfeet" in command:
 		await send_feet(message)
 
-	if "dm" in command:
+	elif "dm" in command:
 		await send_direct_message(client, message, command[len("dm "):])
 
-	if "join" in command:
+	elif "join" in command:
 		await join_voice_channel(message)
 
-	if "leave" in command:
+	elif "leave" in command:
 		await leave_voice_channel(message)
 
-	if "clear" in command:
-		await clear_messages(message)
-
-	if "help" in command:
+	elif "help" in command:
 		await send_help_message(message)
 
-	if "disconnect" in command:
+	elif "disconnect" in command:
 		await disconnect_bot(client, message)
 
 async def greet_user(message):
@@ -97,10 +94,6 @@ async def send_direct_message(client, message, command):
 		await target_user.send(msg)
 	except discord.HTTPException as e:
 		await message.channel.send(f"An error occurred while trying to send a DM: {e}")
-
-async def clear_messages(message):
-	async for msg in message.channel.history(limit=1000):
-		await msg.delete()
 
 async def send_help_message(message):
 	help_message = (
